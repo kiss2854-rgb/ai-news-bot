@@ -8,9 +8,9 @@ from article_reader import get_article_text
 from telegram_sender import send_message
 
 rss_feeds = [
-    ("TechCrunch", "https://techcrunch.com/feed/"),
-    ("The Verge", "https://www.theverge.com/rss/index.xml"),
-    ("VentureBeat", "https://venturebeat.com/category/ai/feed/")
+    ("TechCrunch", "https://techcrunch.com/feed/", True),
+    ("The Verge", "https://www.theverge.com/rss/index.xml", True),
+    ("VentureBeat", "https://venturebeat.com/category/ai/feed/", True)
 ]
 
 today = datetime.now().strftime("%Y-%m-%d")
@@ -23,36 +23,49 @@ with open(filename, "w", encoding="utf-8") as file:
 
     file.write("오늘의 IT 뉴스\n\n")
 
-    for site_name, rss_url in rss_feeds:
+    for site_name, rss_url, use_scraping in rss_feeds:
 
         #확인
         print(site_name)
+        
+        response = requests.get(
+            rss_url,
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10
+        )   
 
-        response = requests.get(rss_url, timeout=10)
         feed = feedparser.parse(response.content)
 
         #확인
         print(len(feed.entries))
 
-        all_articles.append(f"\n### {site_name} 뉴스\n")
+        if feed.entries:
+            all_articles.append(
+               f"\n\n========== {site_name} ==========\n\n"
+            )   
 
         for i, entry in enumerate(feed.entries[:20], start=1):
 
-          news = f"{i}. {entry.title}\n"
-          link = f"링크: {entry.link}\n"
+            news = f"[기사 {i}] {entry.title}\n"
+            link = f"{entry.link}\n"
 
-          article_text = get_article_text(entry.link)
+            if use_scraping:
+                article_text = get_article_text(entry.link)
+            else:
+                article_text = entry.summary
 
-          article_data = (
+            if not article_text:
+                article_text = entry.summary
+
+            article_data = (
+                f"[언론사] {site_name}\n" +
                 news +
                 link +
                 article_text +
-                "\n" +
-                ("-" * 50) +
-                "\n"
-          )
+                "\n\n========== 기사 끝 ==========\n\n"
+            )
 
-          all_articles.append(article_data)
+            all_articles.append(article_data)
 
     # 기사 전체 합치기
     all_text = "\n".join(all_articles)

@@ -8,10 +8,8 @@ def get_article_text(url):
         article.download()
         article.parse()
 
-        return article.text[:500]
+        return article.text[:150]
 
-    except Exception as e:
-        print(f"기사 읽기 실패: {url}")
-        print(e)
+    except Exception:
 
         return ""
