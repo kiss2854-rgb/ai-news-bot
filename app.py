@@ -1,45 +1,72 @@
 import feedparser
 import time
+import requests
 
 from datetime import datetime
 from summarizer import summarize
 from article_reader import get_article_text
 from telegram_sender import send_message
 
-rss_url = "https://techcrunch.com/feed/"
-
-feed = feedparser.parse(rss_url)
+rss_feeds = [
+    ("TechCrunch", "https://techcrunch.com/feed/"),
+    ("The Verge", "https://www.theverge.com/rss/index.xml"),
+    ("VentureBeat", "https://venturebeat.com/category/ai/feed/")
+]
 
 today = datetime.now().strftime("%Y-%m-%d")
 
 filename = f"reports/{today}-news.txt"
 
+all_articles = []
+
 with open(filename, "w", encoding="utf-8") as file:
 
     file.write("오늘의 IT 뉴스\n\n")
 
-    for i, entry in enumerate(feed.entries[:3], start=1):
+    for site_name, rss_url in rss_feeds:
 
-        news = f"{i}. {entry.title}\n"
-        link = f"링크: {entry.link}\n"
+        #확인
+        print(site_name)
 
-        article_text = get_article_text(entry.link)
-        
-        summary = summarize(article_text) + "\n"
+        response = requests.get(rss_url, timeout=10)
+        feed = feedparser.parse(response.content)
 
-        line = "-" * 50 + "\n"
+        #확인
+        print(len(feed.entries))
 
-        print(news)
-        print(link)
-        print(summary)
+        all_articles.append(f"\n### {site_name} 뉴스\n")
 
-        file.write(news)
-        file.write(link)
-        file.write(summary)
-        file.write(line)
+        for i, entry in enumerate(feed.entries[:20], start=1):
 
-        send_message(news + "\n" + link + "\n" + summary)
+          news = f"{i}. {entry.title}\n"
+          link = f"링크: {entry.link}\n"
 
-        time.sleep(5)
+          article_text = get_article_text(entry.link)
+
+          article_data = (
+                news +
+                link +
+                article_text +
+                "\n" +
+                ("-" * 50) +
+                "\n"
+          )
+
+          all_articles.append(article_data)
+
+    # 기사 전체 합치기
+    all_text = "\n".join(all_articles)
+
+    # Gemini 1회 호출
+    summary = summarize(all_text)
+
+    # 출력
+    print(summary)
+
+    # 파일 저장
+    file.write(summary)
+
+    # Telegram 전송
+    send_message(summary)
 
 print(f"\n저장 완료: {filename}")
