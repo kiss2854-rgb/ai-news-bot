@@ -21,5 +21,8 @@ def send_message(message):
 
     response = requests.post(url, data=data)
 
-#    전송 실패 대비 로그
-#    print(response.text)
+    # Telegram API 응답 코드 확인
+    print(response.status_code)
+
+    # Telegram API 응답 내용 확인
+    print(response.text)

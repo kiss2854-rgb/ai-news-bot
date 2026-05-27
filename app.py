@@ -25,7 +25,7 @@ with open(filename, "w", encoding="utf-8") as file:
 
     for site_name, rss_url, use_scraping in rss_feeds:
 
-        #확인
+        # 현재 처리 중인 언론사 출력
         print(site_name)
         
         response = requests.get(
@@ -36,7 +36,7 @@ with open(filename, "w", encoding="utf-8") as file:
 
         feed = feedparser.parse(response.content)
 
-        #확인
+        # RSS 기사 개수 확인
         print(len(feed.entries))
 
         if feed.entries:
@@ -72,6 +72,9 @@ with open(filename, "w", encoding="utf-8") as file:
 
     # Gemini 1회 호출
     summary = summarize(all_text)
+
+    # Telegram 메시지 길이 확인
+    print(len(summary))
 
     # 출력
     print(summary)
