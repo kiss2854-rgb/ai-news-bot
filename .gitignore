@@ -6,3 +6,4 @@ reports/
 *.pyc
 .idea/
 .vscode/
+summarizer.py
