@@ -75,7 +75,5 @@ ai-news-bot/
 ├── requirements.txt
 ├── reports/
 ├── cron.log
-├── assets/
-│   └── telegram-preview.png
 └── README.md
 ```
